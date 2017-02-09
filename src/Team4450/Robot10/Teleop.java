@@ -12,6 +12,7 @@ import Team4450.Lib.LaunchPad.*;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,7 +21,7 @@ import edu.wpi.first.wpilibj.Relay;
 class Teleop
 {
 	private final Robot 		robot;
-	public  JoyStick			rightStick, leftStick, utilityStick;
+	public  Joystick			rightStick, leftStick, utilityStick;
 	public  LaunchPad			launchPad;
 	private final ValveDA		shifterValve = new ValveDA(2);
 	private final ValveDA		ptoValve = new ValveDA(0);
