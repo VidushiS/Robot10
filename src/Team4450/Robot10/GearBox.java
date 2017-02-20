@@ -7,93 +7,116 @@ public class GearBox {
 	private final Teleop		teleop;
 	
 	
-	private final ValveDA		RightSideRobot = new ValveDA(2);
-	private final ValveDA		LeftSideRobot = new ValveDA(3);// It is both a single and double action, consider calling ValveSA as well
-	private final ValveSA		LeftSideRobot2 = new ValveSA(4);
+	private final ValveDA		DblActVlvRS = new ValveDA(2);
+	private final ValveDA		DblActVlvLS = new ValveDA(3);// It is both a single and double action, consider calling ValveSA as well
+	private final ValveDA		PTOValve = new ValveDA(4);
+	
+	public boolean lowGear = false; 
+	public boolean highGear = false;
+	public boolean neutralGear = false;
+	
+	public void GearBox(Robot robot, Teleop teleop){
+		this.robot = robot;
+		this.teleop = teleop;
+		
+		
+	}
+	public void highGear(){
 
-	public void highGear(String highGear){
-
-
-		switch(highGear){
-
-		case "lowGear": 
-			LeftSideRobot.SetB();
-			LeftSideRobot2.Close();
-
-			RightSideRobot.SetB();
-
-			break;
-
-		case "highGear":
+		if (lowGear) {
+			DblActVlvLS.SetB();
+			PTOValve.Close();
+			
+			
+			DblActVlvRS.SetB();
+			lowGear = false;
+			highGear = true;
+		}
+		else if (highGear){
+			
 			Util.consoleLog("Already in High Gear");
-
-			break;
-
-		case "neutralGear":
-			Util.consoleLog();
-			LeftSideRobot2.Close();
-
-			break;
+			return;
 		}
-	}
-	public void lowGear(String lowGear){
+		else if (neutralGear){
+			Util.consoleLog();
+			PTOValve.Close();
+			
+			neutralGear = false;
+			highGear = true;
+		}
+			
+			
+		}
+	
+	public void lowGear(){
 
 
-		switch(lowGear){
-
-		case "lowGear": 
+		if (lowGear){ 
 			Util.consoleLog("Already in Low Gear!!!");
+			return;
+			
+		}		
 
-			break;
-
-		case "highGear":
+		if (highGear){
 			Util.consoleLog();
 
-			LeftSideRobot2.Open();
-			LeftSideRobot.SetA();
+			PTOValve.Open();
+			
+			DblActVlvLS.SetA();
+			
+			
+			DblActVlvRS.SetA();
+			
+			highGear = false;
+			lowGear = true;
+		}
 
-			RightSideRobot.SetA();
-
-			break;
-
-		case "neutralGear":
-			LeftSideRobot2.Open();
-
-			break;
+		if (neutralGear){
+			PTOValve.Open();
+			
+			neutralGear = false;
+			lowGear = true;
 		}
 
 	}
-	public void neutralGear(String neutralGear){
+	public void neutralGear(){
 
-		switch(neutralGear){
-
-		case "lowGear": 
+		if (lowGear){
 			Util.consoleLog();
-			LeftSideRobot2.Close();
-			LeftSideRobot.SetB();
-			LeftSideRobot.SetA();
+			PTOValve.Close();
+			
+			DblActVlvLS.SetB();
+			
+			DblActVlvLS.SetA();
+			
 
-			RightSideRobot.SetA();
+			DblActVlvRS.SetA();
+			
+			lowGear = false;
+			neutralGear = true;
+		}
 
-			break;
-
-		case "highGear":
+		if (highGear){
 			Util.consoleLog();
-			LeftSideRobot.SetA();
+			DblActVlvLS.SetA();
+			
 
-			RightSideRobot.SetA();
-			break;
+			DblActVlvRS.SetA();
+			
+			highGear = false;
+			neutralGear = true;
+		}
 
-		case "neutralGear":
+		if (neutralGear){
 			Util.consoleLog("Already in neutral gear!!!");
-
-			break;
+			return;
+		}
 
 
 		}
 
 
 	}
-}
+
 
 
