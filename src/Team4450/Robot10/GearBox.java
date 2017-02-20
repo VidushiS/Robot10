@@ -8,9 +8,9 @@ public class GearBox {
 	private final Teleop		teleop;
 	
 	
-	private final ValveDA		shifter = new ValveDA(2);
-	private final ValveDA		neutral = new ValveDA(3);// It is both a single and double action, consider calling ValveSA as well
-	private final ValveDA		PTOValve = new ValveDA(4);
+	private final ValveDA		shifter = new ValveDA(0);
+	private final ValveDA		neutral = new ValveDA(4);// It is both a single and double action, consider calling ValveSA as well
+	private final ValveDA		PTOValve = new ValveDA(2);
 	
 	public boolean lowGear = false; 
 	public boolean highGear = false;
@@ -26,10 +26,10 @@ public class GearBox {
 	public void highGear(){
 
 		if (lowGear) {
-			shifter.SetB();
-			neutral.SetB();
+			shifter.SetA();
+			neutral.SetA();
 			
-			PTOValve.Close();
+			PTOValve.SetB();
 			
 			lowGear = false;
 			highGear = true;
@@ -42,9 +42,9 @@ public class GearBox {
 		else if (neutralGear){
 			Util.consoleLog();
 			shifter.SetB();
-			neutral.SetB();
+			neutral.SetA();
 			
-			PTOValve.Close();
+			PTOValve.SetB();
 			
 			neutralGear = false;
 			highGear = true;
@@ -65,7 +65,7 @@ public class GearBox {
 		if (highGear){
 			Util.consoleLog();
 
-			PTOValve.Close();
+			PTOValve.SetB();
 			
 			shifter.SetA();
 			neutral.SetA();
