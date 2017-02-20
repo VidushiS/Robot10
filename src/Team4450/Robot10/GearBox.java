@@ -26,10 +26,8 @@ public class GearBox {
 	public void highGear(){
 
 		if (lowGear) {
-			shifter.SetA();
-			neutral.SetA();
-			
-			PTOValve.SetB();
+			shifter.SetB();
+			neutral.SetB();
 			
 			lowGear = false;
 			highGear = true;
@@ -41,10 +39,8 @@ public class GearBox {
 		}
 		else if (neutralGear){
 			Util.consoleLog();
-			shifter.SetB();
+			shifter.SetA();
 			neutral.SetA();
-			
-			PTOValve.SetB();
 			
 			neutralGear = false;
 			highGear = true;
@@ -68,7 +64,7 @@ public class GearBox {
 			PTOValve.SetB();
 			
 			shifter.SetA();
-			neutral.SetA();
+			neutral.SetB();
 			
 			highGear = false;
 			lowGear = true;
@@ -102,7 +98,7 @@ public class GearBox {
 
 		if (highGear){
 			Util.consoleLog();
-			
+			neutral.SetB();
 			shifter.SetA();
 			
 			highGear = false;
