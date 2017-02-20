@@ -7,8 +7,8 @@ public class GearBox {
 	private final Teleop		teleop;
 	
 	
-	private final ValveDA		DblActVlvRS = new ValveDA(2);
-	private final ValveDA		DblActVlvLS = new ValveDA(3);// It is both a single and double action, consider calling ValveSA as well
+	private final ValveDA		shifter = new ValveDA(2);
+	private final ValveDA		neutral = new ValveDA(3);// It is both a single and double action, consider calling ValveSA as well
 	private final ValveDA		PTOValve = new ValveDA(4);
 	
 	public boolean lowGear = false; 
@@ -60,7 +60,7 @@ public class GearBox {
 		if (highGear){
 			Util.consoleLog();
 
-			PTOValve.Open();
+			PTOValve.Close();
 			
 			DblActVlvLS.SetA();
 			
