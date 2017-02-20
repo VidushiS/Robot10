@@ -1,6 +1,7 @@
 package Team4450.Robot10;
 
 import Team4450.Lib.*;
+import edu.wpi.first.wpilibj.smartdashboard.*;
 
 public class GearBox {
 	private final Robot			robot;
@@ -14,6 +15,7 @@ public class GearBox {
 	public boolean lowGear = false; 
 	public boolean highGear = false;
 	public boolean neutralGear = false;
+	public boolean PTO = false;
 	
 	public void GearBox(Robot robot, Teleop teleop){
 		this.robot = robot;
@@ -24,11 +26,11 @@ public class GearBox {
 	public void highGear(){
 
 		if (lowGear) {
+			shifter.SetB();
 			neutral.SetB();
+			
 			PTOValve.Close();
 			
-			
-			shifter.SetB();
 			lowGear = false;
 			highGear = true;
 		}
@@ -39,6 +41,9 @@ public class GearBox {
 		}
 		else if (neutralGear){
 			Util.consoleLog();
+			shifter.SetB();
+			neutral.SetB();
+			
 			PTOValve.Close();
 			
 			neutralGear = false;
@@ -62,17 +67,18 @@ public class GearBox {
 
 			PTOValve.Close();
 			
-			neutral.SetA();
-			
-			
 			shifter.SetA();
+			neutral.SetA();
 			
 			highGear = false;
 			lowGear = true;
 		}
 
 		if (neutralGear){
-			PTOValve.Open();
+			PTOValve.Close();
+			
+			shifter.SetA();
+			neutral.SetA();
 			
 			neutralGear = false;
 			lowGear = true;
@@ -85,12 +91,10 @@ public class GearBox {
 			Util.consoleLog();
 			PTOValve.Close();
 			
+			shifter.SetB();
 			neutral.SetB();
-			
-			neutral.SetA();
-			
-
 			shifter.SetA();
+		
 			
 			lowGear = false;
 			neutralGear = true;
@@ -98,9 +102,7 @@ public class GearBox {
 
 		if (highGear){
 			Util.consoleLog();
-			neutral.SetA();
 			
-
 			shifter.SetA();
 			
 			highGear = false;
@@ -111,12 +113,27 @@ public class GearBox {
 			Util.consoleLog("Already in neutral gear!!!");
 			return;
 		}
+	}
 
-
+	public void EnablePTO(){
+		Util.consoleLog();
+		neutralGear();
+		PTOValve.SetA();
+		PTO = true;
+		SmartDashboard.putBoolean("PTO", PTO);
+		}
+	public void ClosePTO(){
+		Util.consoleLog();
+		lowGear();
+		PTOValve.SetB();
+		PTO = false;
+		SmartDashboard.putBoolean("PTO", PTO);
+		}
+	
 		}
 
 
-	}
+	
 
 
 
