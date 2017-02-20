@@ -1,41 +1,56 @@
 package Team4450.Robot10;
 
-import com.ctre.CANTalon;
 import Team4450.Lib.*;
-import Team4450.Lib.JoyStick.*;
-import Team4450.Lib.LaunchPad.*;
-import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.smartdashboard.*;
 
 public class Shooter {
-	private final Robot				robot;
-	private final Teleop 			teleop;
-	private final CANTalon			shooterMotor1 =  new CANTalon(1);
-	private final CANTalon			shooterMotor2 = new CANTalon(2);
-	private final CANTalon			intakeMotor = new CANTalon(3);
-
-	public Encoder					encoder = new Encoder(4, 4, true, EncodingType.k4X); 
-	//CHANGE dio PORTS AND REMEMBER!!!!!!!!!!!!!!!!
-		
-	public double					SHOOTER_LOW_POWER = 1;
-	public double					SHOOTER_HIGH_POWER = 1;
-	public double					SHOOTER_LOW_RPM = 1; 
-	public double					SHOOTER_HIGH_RPM;
+	private Robot			robot;
 	
-	private Thread 					autoPickupThread, autoSpitballThread, shootThread;
+	private Talon			shooterMotor1 = new Talon(2);
+	private Talon			shooterMotor2 = new Talon(3);
 	
+	public boolean			shooterOn = false;
 	
-	Shooter(Robot robot,Teleop teleop){
-	
+	public Shooter(Robot robot){
+		Util.consoleLog();
+		this.robot = robot;
+	}
+	public void dispose(){
 		Util.consoleLog();
 		
-		
-		
+		if(shooterMotor1 != null) shooterMotor1.free();
+		if(shooterMotor2 != null) shooterMotor2.free();
 	}
+	public void shooterStart(){
+		Util.consoleLog();
+		
+		shooterMotor1.set(.5);
+		shooterMotor2.set(.5);
+		
+		shooterOn = true;
+		
+		SmartDashboard.putBoolean("Shooter Motor", shooterOn);
 	}
-	
+	public void shooterStop(){
+		Util.consoleLog();
+		
+		shooterMotor1.set(0);
+		shooterMotor2.set(0);
+		
+		shooterOn = false;
+		
+		SmartDashboard.putBoolean("Shooter Motor", shooterOn);
+	}
+	public void shooterCheck(){
+		
+		if(shooterOn = true){
+			Util.consoleLog("The Shooter Motor is on");
+			return;
+		}
+		else if(shooterOn = false){
+			Util.consoleLog("The Shooter Motor is off");
+			return;
+		}
+	}
 }
