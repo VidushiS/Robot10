@@ -24,11 +24,11 @@ public class GearBox {
 	public void highGear(){
 
 		if (lowGear) {
-			DblActVlvLS.SetB();
+			neutral.SetB();
 			PTOValve.Close();
 			
 			
-			DblActVlvRS.SetB();
+			shifter.SetB();
 			lowGear = false;
 			highGear = true;
 		}
@@ -62,10 +62,10 @@ public class GearBox {
 
 			PTOValve.Close();
 			
-			DblActVlvLS.SetA();
+			neutral.SetA();
 			
 			
-			DblActVlvRS.SetA();
+			shifter.SetA();
 			
 			highGear = false;
 			lowGear = true;
@@ -85,12 +85,12 @@ public class GearBox {
 			Util.consoleLog();
 			PTOValve.Close();
 			
-			DblActVlvLS.SetB();
+			neutral.SetB();
 			
-			DblActVlvLS.SetA();
+			neutral.SetA();
 			
 
-			DblActVlvRS.SetA();
+			shifter.SetA();
 			
 			lowGear = false;
 			neutralGear = true;
@@ -98,10 +98,10 @@ public class GearBox {
 
 		if (highGear){
 			Util.consoleLog();
-			DblActVlvLS.SetA();
+			neutral.SetA();
 			
 
-			DblActVlvRS.SetA();
+			shifter.SetA();
 			
 			highGear = false;
 			neutralGear = true;
