@@ -12,20 +12,23 @@ import Team4450.Lib.LaunchPad.*;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.Relay;
 
 class Teleop
 {
 	private final Robot 		robot;
-	public  Joystick			rightStick, leftStick, utilityStick;
+	//private final Teleop		teleop;
+	private final GearBox		gearbox;
+	private final GearLifter	gearlifter;
+	private final BallPickupMotor ballpickupmotor;
+	private final Shooter		shooter;
+	public  JoyStick			rightStick, leftStick, utilityStick;
 	public  LaunchPad			launchPad;
 	private final ValveDA		shifterValve = new ValveDA(2);
 	private final ValveDA		ptoValve = new ValveDA(0);
-	private boolean				ptoMode = false;
+	//private boolean				ptoMode = false;
 	private boolean				autoTarget = false;
 
 	// Wheel encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
@@ -40,6 +43,10 @@ class Teleop
 		Util.consoleLog();
 
 		this.robot = robot;
+		gearbox = new GearBox(robot, this);
+		shooter = new Shooter(robot);
+		ballpickupmotor = new BallPickupMotor(robot);
+		gearlifter = new GearLifter(robot,this);
 	}
 
 	// Free all objects that need it.
@@ -54,6 +61,10 @@ class Teleop
 		if (launchPad != null) launchPad.dispose();
 		if (shifterValve != null) shifterValve.dispose();
 		if (ptoValve != null) ptoValve.dispose();
+		if (gearbox != null) gearbox.Dispose();
+		if (shooter != null) shooter.dispose();
+		if (gearlifter != null) gearlifter.Dispose();
+		if (ballpickupmotor != null) ballpickupmotor.Dispose();
 		//if (encoder != null) encoder.free();
 	}
 
@@ -71,8 +82,8 @@ class Teleop
 		
 		// Initial setting of air valves.
 
-		shifterLow();
-		ptoDisable();
+		gearbox.lowGear();
+		gearbox.ClosePTO();
 		
 		// Configure LaunchPad and Joystick event handlers.
 		
@@ -82,6 +93,10 @@ class Teleop
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_YELLOW);
+		launchPad.AddControl(LaunchPadControlIDs.BUTTON_RED_RIGHT);
+		launchPad.AddControl(LaunchPadControlIDs.BUTTON_RED);
+		launchPad.AddControl(LaunchPadControlIDs.BUTTON_BLUE_RIGHT);
+		launchPad.AddControl(LaunchPadControlIDs.BUTTON_BLUE);
         launchPad.addLaunchPadEventListener(new LaunchPadListener());
         launchPad.Start();
 
@@ -94,7 +109,11 @@ class Teleop
         rightStick.Start();
         
 		utilityStick = new JoyStick(robot.utilityStick, "UtilityStick", JoyStickButtonIDs.TRIGGER, this);
-        utilityStick.addJoyStickEventListener(new UtilityStickListener());
+			utilityStick.AddButton(JoyStickButtonIDs.TOP_LEFT);
+			utilityStick.AddButton(JoyStickButtonIDs.TOP_RIGHT);
+			utilityStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
+			utilityStick.AddButton(JoyStickButtonIDs.TOP_BACK);
+		utilityStick.addJoyStickEventListener(new UtilityStickListener());
         utilityStick.Start();
         
         // Tighten up dead zone for smoother turrent movement.
@@ -106,8 +125,8 @@ class Teleop
         if (robot.isComp) robot.SetCANTalonBrakeMode(lpControl.latchedState);
         
         // Set gyro to heading 0.
-        robot.gyro.reset();
-
+        //robot.gyro.reset();
+        robot.navx.resetYaw();
         // Motor safety turned on.
         robot.robotDrive.setSafetyEnabled(true);
         
@@ -118,7 +137,7 @@ class Teleop
 			// Get joystick deflection and feed to robot drive object
 			// using calls to our JoyStick class.
 
-			if (ptoMode)
+			if (gearbox.PTOstate())
 			{
 				rightY = utilityStick.GetY();
 
@@ -133,8 +152,8 @@ class Teleop
 			utilX = utilityStick.GetX();
 			
 			LCD.printLine(4, "leftY=%.4f  rightY=%.4f utilX=%.4f", leftY, rightY, utilX);
-			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
-			
+			//LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
+			LCD.printLine(6, "yaw=%.0f, total=%.0f, rate=%.3f", robot.navx.getYaw(), robot.navx.getTotalYaw(), robot.navx.getYawRate());
 			// Set wheel motors.
 			// Do not feed JS input to robotDrive if we are controlling the motors in automatic functions.
 
@@ -191,7 +210,7 @@ class Teleop
 	// Transmission control functions.
 	
 	//--------------------------------------
-	void shifterLow()
+	/*void shifterLow()
 	{
 		Util.consoleLog();
 		
@@ -232,7 +251,7 @@ class Teleop
 		ptoMode = true;
 		
 		SmartDashboard.putBoolean("PTO", true);
-	}
+	}*/
 	
 	// Handle LaunchPad control events.
 	
@@ -246,21 +265,43 @@ class Teleop
 			
 			switch(control.id)
 			{
-				case BUTTON_YELLOW:
-					robot.cameraThread.ChangeCamera();
+				case BUTTON_YELLOW: //set up auto gear pickup
+					if(launchPadEvent.control.latchedState){
+						gearlifter.AutoGearPickup();
+					}
+					else gearlifter.StopAutoGearPickup();
+					break;
+					
+				case BUTTON_BLUE_RIGHT:
+					if (launchPadEvent.control.latchedState){// Takes climber class place.
+						gearlifter.GearUp();
+					}
+					else gearlifter.GearDown();
+					
     				break;
     				
 				case BUTTON_BLUE:
     				if (launchPadEvent.control.latchedState)
     				{
-    					shifterLow();
-    					ptoEnable();
+    					gearbox.EnablePTO();
+    				
     				}
-        			else
-        				ptoDisable();
+        			else gearbox.ClosePTO();
+        				
 
     				break;
-    				
+				case BUTTON_RED:
+					if (launchPadEvent.control.latchedState)
+					{
+						gearlifter.GearOut();
+					}
+					else gearlifter.GearIn();
+					
+					break;
+				
+				case BUTTON_RED_RIGHT:
+					break;
+					
 				default:
 					break;
 			}
@@ -287,7 +328,11 @@ class Teleop
     	    			robot.SetCANTalonBrakeMode(true);	// brake
     				
     				break;
-    				
+	    		case ROCKER_LEFT_FRONT:
+	    			robot.cameraThread.ChangeCamera();
+					//invertDrive = !invertDrive;
+					break;
+					
 				default:
 					break;
 	    	}
@@ -336,9 +381,9 @@ class Teleop
 			{
 				case TRIGGER:
 					if (button.latchedState)
-	    				shifterHigh();
+	    				gearbox.highGear();
 	    			else
-	    				shifterLow();
+	    				gearbox.lowGear();
 
 					break;
 					
@@ -367,8 +412,34 @@ class Teleop
 			{
 				// Trigger starts shoot sequence.
 				case TRIGGER:
+					if (button.latchedState){
+						gearbox.highGear();
+					}
+					else gearbox.lowGear();
     				break;
-				
+				case TOP_RIGHT:
+					if (button.latchedState){
+						ballpickupmotor.shooterStart();
+					}
+					else ballpickupmotor.shooterStop();
+					break;
+				case TOP_LEFT:
+					if (button.latchedState){
+						shooter.shooterStart();
+					}
+					else shooter.shooterStop();
+					break;
+				case TOP_MIDDLE:
+					if(button.latchedState){
+					gearlifter.startGearIn();}
+					else gearlifter.stopGear();
+					break;
+				case TOP_BACK:
+					if(button.latchedState){
+						gearlifter.startGearOut();
+					}
+					else gearlifter.stopGear();
+					break;
 				default:
 					break;
 			}
