@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import Team4450.Lib.*;
-import edu.wpi.first.wpilibj.AnalogGyro;
+//import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,7 +30,7 @@ import com.ctre.CANTalon.*;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "VS10-01.20.17-01";
+  static final String  	PROGRAM_NAME = "VS10-03.30.17-01";//Change at a later date
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -44,7 +44,7 @@ public class Robot extends SampleRobot
   
   final Compressor		compressor = new Compressor(0);	// Compressor class represents the PCM. There are 2.
   final Compressor		compressor1 = new Compressor(1);
-  //final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
+  private ValveDA		unusedValve = new ValveDA(1,3);
   
   public Properties		robotProperties;
   
@@ -111,14 +111,16 @@ public class Robot extends SampleRobot
    		SmartDashboard.putBoolean("CompressorEnabled", Boolean.parseBoolean(robotProperties.getProperty("CompressorEnabledByDefault")));
 
    		// Initialize PID data entry fields on the DS to thier default values.
+   		Shooter shooter = new Shooter(this);
    		
    		SmartDashboard.putBoolean("PIDEnabled", false);
-   		SmartDashboard.putNumber("PValue", 0);
-   		SmartDashboard.putNumber("IValue", 0);
-   		SmartDashboard.putNumber("DValue", 0);
-   		SmartDashboard.putNumber("LowSetting", 0);
-   		SmartDashboard.putNumber("HighSetting", 0);
+   		SmartDashboard.putNumber("PValue", shooter.pValue);
+   		SmartDashboard.putNumber("IValue", shooter.iValue);
+   		SmartDashboard.putNumber("DValue", shooter.dValue);
+   		SmartDashboard.putNumber("LowSetting", shooter.SHOOTER_LOW_RPM);
+   		SmartDashboard.putNumber("HighSetting", shooter.SHOOTER_LOW_RPM);
    		
+   		shooter.dispose();
    		// Reset PDB & PCM sticky faults.
       
    		PDP.clearStickyFaults();

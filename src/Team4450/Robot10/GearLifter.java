@@ -4,15 +4,15 @@ import com.ctre.CANTalon;
 import edu.wpi.first.wpilibj.Timer;
 import Team4450.Lib.*;
 import edu.wpi.first.wpilibj.smartdashboard.*;
-import java.io.IOException;
 import Team4450.Lib.LCD;
+import Team4450.Lib.LaunchPad.LaunchPadControlIDs;
 import Team4450.Lib.Util;
 
 public class GearLifter {
 	private final Robot				robot;
 	private final Teleop			teleop;
 
-	private final CANTalon			gearPickupMotor = new CANTalon(1);
+	private final CANTalon			gearPickupMotor = new CANTalon(7);
 	private final ValveDA			gearLifter = new ValveDA(6);
 	private final ValveDA			gearDeploy = new ValveDA(1,0); //in PCM 1 ports
 	private Team4450.Robot10.GearLifter.AutoGearPickup					autoPickupThread;
@@ -27,6 +27,10 @@ public class GearLifter {
 		this.robot = robot;
 		this.teleop = teleop;
 
+		robot.InitializeCANTalon((CANTalon) gearPickupMotor);
+		gearPickupMotor.enableBrakeMode(true);
+		
+		
 	}
 	public void Dispose(){
 		Util.consoleLog();
@@ -49,7 +53,10 @@ public class GearLifter {
 	}
 	public void stopGear(){
 		Util.consoleLog();
-
+		
+		if (teleop != null){
+			if(teleop.launchPad != null)((Object) teleop.launchPad.FindButton(LaunchPadControlIDs.BUTTON_YELLOW)).latchedState(false);
+		}
 		gearPickupMotor.set(0.0);
 		gearMotor = false;
 	}
@@ -134,6 +141,18 @@ public class GearLifter {
 				while(!isInterrupted() & gearPickupMotor.getOutputCurrent() < 5.0){
 					Timer.delay(.5);
 				}
+				if(!interrupted()) Util.consoleLog("Gear in Place");
+				
+				startGearIn();
+				GearIn();
+				GearUp();
+				Timer.delay(1);
+				stopGear();
+			}
+			catch(InterruptedException e){
+				stopGear();
+				GearIn();
+				GearUp();
 			}
 			catch(Throwable e){e.printStackTrace(Util.logPrintStream);
 			}

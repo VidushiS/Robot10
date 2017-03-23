@@ -11,6 +11,9 @@ public class Autonomous
 {
 	private final Robot	robot;
 	private final int	program = (int) SmartDashboard.getNumber("AutoProgramSelect");
+	private GearLifter  gearLifter;
+	private GearBox     gearBox;
+	private Vision      vision;
 	
 	// encoder is plugged into dio port 2 - orange=+5v blue=signal, dio port 3 black=gnd yellow=signal. 
 	private Encoder		encoder = new Encoder(1, 2, true, EncodingType.k4X);
@@ -20,13 +23,18 @@ public class Autonomous
 		Util.consoleLog();
 		
 		this.robot = robot;
+		gearBox = new GearBox(robot, null);
+		gearLifter = new GearLifter(robot, null);
+		vision = Vision.getInstance(robot);
 	}
 
 	public void dispose()
 	{
 		Util.consoleLog();
 		
-		encoder.free();
+		if(encoder != null) encoder.free();
+		if(gearBox != null) gearBox.Dispose();
+		if(gearLifter != null) gearLifter.Dispose();
 	}
 
 	public void execute()
@@ -39,6 +47,7 @@ public class Autonomous
 		// Initialize encoder.
 		encoder.reset();
         
+		robot.navx.resetYaw();
         // Set gyro to heading 0.
      //   robot.gyro.reset();
 
