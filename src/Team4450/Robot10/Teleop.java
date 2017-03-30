@@ -24,15 +24,16 @@ class Teleop
 	private final GearLifter	gearlifter;
 	private final BallPickupMotor ballpickupmotor;
 	private final Shooter		shooter;
+	//private final Vision		vision;
 	public  JoyStick			rightStick, leftStick, utilityStick;
 	public  LaunchPad			launchPad;
-	private final ValveDA		shifterValve = new ValveDA(2);
-	private final ValveDA		ptoValve = new ValveDA(0);
+	//private final ValveDA		shifterValve = new ValveDA(2);
+	//private final ValveDA		ptoValve = new ValveDA(0);
 	//private boolean				ptoMode = false;
-	private boolean				autoTarget = false;
+	private boolean				autoTarget = false, invertDrive;
 
 	// Wheel encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
-	//private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
+	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
 
 	// Encoder ribbon cable to dio ports: ribbon wire 2 = orange, 5 = yellow, 7 = blue, 10 = black
 
@@ -47,6 +48,7 @@ class Teleop
 		shooter = new Shooter(robot);
 		ballpickupmotor = new BallPickupMotor(robot);
 		gearlifter = new GearLifter(robot,this);
+		//vision = Vision.getInstance(robot);
 	}
 
 	// Free all objects that need it.
@@ -59,13 +61,13 @@ class Teleop
 		if (rightStick != null) rightStick.dispose();
 		if (utilityStick != null) utilityStick.dispose();
 		if (launchPad != null) launchPad.dispose();
-		if (shifterValve != null) shifterValve.dispose();
-		if (ptoValve != null) ptoValve.dispose();
+		//if (shifterValve != null) shifterValve.dispose();
+		//if (ptoValve != null) ptoValve.dispose();
 		if (gearbox != null) gearbox.Dispose();
 		if (shooter != null) shooter.dispose();
 		if (gearlifter != null) gearlifter.Dispose();
 		if (ballpickupmotor != null) ballpickupmotor.Dispose();
-		//if (encoder != null) encoder.free();
+		if (encoder != null) encoder.free();
 	}
 
 	void OperatorControl()
@@ -105,6 +107,8 @@ class Teleop
         leftStick.Start();
         
 		rightStick = new JoyStick(robot.rightStick, "RightStick", JoyStickButtonIDs.TOP_LEFT, this);
+		rightStick.AddButton(JoyStickButtonIDs.TRIGGER);
+		rightStick.AddButton(JoyStickButtonIDs.TOP_LEFT);
         rightStick.addJoyStickEventListener(new RightStickListener());
         rightStick.Start();
         
@@ -127,6 +131,8 @@ class Teleop
         // Set gyro to heading 0.
         //robot.gyro.reset();
         robot.navx.resetYaw();
+        
+        encoder.reset();
         // Motor safety turned on.
         robot.robotDrive.setSafetyEnabled(true);
         
@@ -139,9 +145,9 @@ class Teleop
 
 			if (gearbox.PTOstate())
 			{
-				rightY = utilityStick.GetY();
+				rightY = stickLogCorrection(rightStick.GetY());
 
-				leftY = rightY;
+				leftY = stickLogCorrection(utilityStick.GetY());
 			} 
 			else
 			{
@@ -300,6 +306,13 @@ class Teleop
 					break;
 				
 				case BUTTON_RED_RIGHT:
+					if (launchPadEvent.control.latchedState)
+					{
+						gearlifter.GearOut();
+					}
+					else gearlifter.GearIn();
+					
+			
 					break;
 					
 				default:
@@ -329,7 +342,7 @@ class Teleop
     				
     				break;
 	    		case ROCKER_LEFT_FRONT:
-	    			robot.cameraThread.ChangeCamera();
+	    			if(robot.cameraThread != null)robot.cameraThread.ChangeCamera();
 					//invertDrive = !invertDrive;
 					break;
 					
@@ -346,12 +359,18 @@ class Teleop
 		
 	    public void ButtonDown(JoyStickEvent joyStickEvent) 
 	    {
+	    	int angle;
 	    	JoyStickButton	button = joyStickEvent.button;
 	    	
 			Util.consoleLog("%s, latchedState=%b", button.id.name(),  button.latchedState);
 			
 			switch(button.id)
 			{
+				case TRIGGER:
+				if (robot.cameraThread != null) robot.cameraThread.ChangeCamera();
+				
+				break;
+				
 				case TOP_LEFT:
    					robot.cameraThread.ChangeCamera();
     				break;
@@ -419,13 +438,14 @@ class Teleop
     				break;
 				case TOP_RIGHT:
 					if (button.latchedState){
-						ballpickupmotor.shooterStart();
+						shooter.Feeder();
+						if(!shooter.shooterCheck())shooter.feedReverse();
 					}
-					else ballpickupmotor.shooterStop();
+					else shooter.shooterStop();
 					break;
 				case TOP_LEFT:
 					if (button.latchedState){
-						shooter.shooterStart();
+						shooter.shooterStart(shooter.SHOOTER_HIGH_POWER);
 					}
 					else shooter.shooterStop();
 					break;

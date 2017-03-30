@@ -58,6 +58,14 @@ public class Autonomous
 		{
 			case 0:		// No auto program.
 				break;
+			case 1:
+				autoDrive(-.70, 9000, true);
+				break;
+			case 2:
+				RobotOrientation();
+				break;
+			case 3:
+				autoDrive(.70, 9000, true);
 		}
 		
 		Util.consoleLog("end");
@@ -65,7 +73,28 @@ public class Autonomous
 
 	// Auto drive in set direction and power for specified encoder count. Stops
 	// with our without brakes on CAN bus drive system. Uses gyro to go straight.
-	
+	private void RobotOrientation(int encoderCounts){
+		
+		if(vision.robotLeftSide()){
+			autoDrive(-.50, 5600, true);
+			autoRotate(-.60, 55);
+		
+		}
+		else if(!vision.robotLeftSide() && vision.robotRightSide()){
+			autoDrive(-.50, 5600, true);
+			autoRotate(.60, 55);
+		}
+		else if(vision.robotCenter()){
+			autoDrive(-.60, encoderCounts, true);
+			gearLifter.GearOut();
+			Timer.delay(.5);
+			gearLifter.GearDown();
+			Timer.delay(.5);
+			gearLifter.stopGear();
+		}
+		
+		
+	}
 	private void autoDrive(double power, int encoderCounts, boolean enableBrakes)
 	{
 		int		angle;
@@ -75,22 +104,44 @@ public class Autonomous
 
 		if (robot.isComp) robot.SetCANTalonBrakeMode(enableBrakes);
 		
+		encoder.reset();
+		robot.navx.resetYaw();
+		
 		while (robot.isAutonomous() && Math.abs(encoder.get()) < encoderCounts) 
 		{
 			LCD.printLine(3, "encoder=%d", encoder.get());
+		}
 			//LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 			
 			// Angle is negative if robot veering left, positive if veering right.
 			
 			//angle = (int) robot.gyro.getAngle();
+			angle = (int) robot.navx.getYaw();
+			
+			if (power > 0) angle = -angle;
+			
+			robot.robotDrive.drive(power, -angle * gain);
 			
 			//Util.consoleLog("angle=%d", angle);
 			
 			//robot.robotDrive.drive(power, -angle * gain);
 			
 			Timer.delay(.020);
-		}
-
-		robot.robotDrive.tankDrive(0, 0, true);				
-	}
+			
+		robot.robotDrive.tankDrive(0, 0, true);	
 }
+
+		public void autoRotate(double power, int angle){
+			Util.consoleLog("power = %.3f, angle = %", power, angle);
+			
+			robot.navx.resetYaw();
+			
+			robot.robotDrive.tankDrive(power, -power);
+			
+			while(robot.isEnabled() && Math.abs(int))robot.navx.getYaw()) < angle){Timer.delay(.020);}
+			
+			robot.robotDrive.tankDrive(0, 0);
+			return;
+		}
+		}
+	

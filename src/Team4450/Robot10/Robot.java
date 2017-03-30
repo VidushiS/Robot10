@@ -57,8 +57,9 @@ public class Robot extends SampleRobot
   DriverStation.Alliance	alliance;
   int                       location;
     
-  Thread               	monitorBatteryThread, monitorDistanceThread, monitorCompressorThread;
+  Thread               	monitorBatteryThread, monitorPDPThread, monitorCompressorThread;
   CameraFeed			cameraThread;
+  MonitorDistanceMBX		monitorDistanceThread;
     
   NavX					navx;
   // Constructor.
@@ -128,6 +129,7 @@ public class Robot extends SampleRobot
    		compressor1.clearAllPCMStickyFaults();
 
    		// Configure motor controllers and RobotDrive.
+   		unusedValve.SetA();
    		
 		InitializeCANTalonDrive();
 		
@@ -154,7 +156,7 @@ public class Robot extends SampleRobot
         // camera IP set here and operator can use button on DS to fall back to
         // standard setting of camera IP from robot IP by the Dashboard code.
    		//SmartDashboard.putBoolean("CameraByRobot", true);
-        
+        navx = NavX.getInstance();
    		// Start the battery, compressor, camera feed and distance monitoring Tasks.
 
    		monitorBatteryThread = MonitorBattery.getInstance(ds);
@@ -165,9 +167,9 @@ public class Robot extends SampleRobot
 
    		// Start camera server using our class for usb cameras.
       
-   		cameraThread = CameraFeed.getInstance(); 
-   		cameraThread.start();
-   		navx = NavX.getInstance();
+   		//cameraThread = CameraFeed.getInstance(); 
+   		//cameraThread.start();
+   		
    		
    		// Start thread to monitor distance sensor.
    		
@@ -202,6 +204,10 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("GearPickupMotor", false);
 		  SmartDashboard.putBoolean("GearPickupDown", false);
 		  SmartDashboard.putBoolean("BallPickupMotor", false);
+		  SmartDashboard.putBoolean("Low", false);
+		  SmartDashboard.putBoolean("High", false);
+		  SmartDashboard.putBoolean("Neutral", false);
+		  SmartDashboard.putBoolean("Feeder", false);
 		  
 		  Util.consoleLog("end");
 	  }
@@ -237,11 +243,11 @@ public class Robot extends SampleRobot
              
     	  // Start autonomous process contained in the Autonomous class.
         
-    	  Autonomous autonomous = new Autonomous(this);
+    	 // Autonomous autonomous = new Autonomous(this);
         
-    	  autonomous.execute();
+    	//  autonomous.execute();
         
-    	  autonomous.dispose();
+    	//  autonomous.dispose();
     	  
     	  SmartDashboard.putBoolean("Auto Mode", false);
     	  Util.consoleLog("end");

@@ -15,11 +15,11 @@ public class GearLifter {
 	private final CANTalon			gearPickupMotor = new CANTalon(7);
 	private final ValveDA			gearLifter = new ValveDA(6);
 	private final ValveDA			gearDeploy = new ValveDA(1,0); //in PCM 1 ports
-	private Team4450.Robot10.GearLifter.AutoGearPickup					autoPickupThread;
+	private Thread					autoPickupThread;
 
 	boolean gearMotor = false;
-	boolean gearDown = false;
-	boolean gearIn = true;
+	boolean gearDown = true;
+	boolean gearIn = false;
 	boolean autoGear = false;
 
 	public GearLifter(Robot robot, Teleop teleop){
@@ -55,7 +55,7 @@ public class GearLifter {
 		Util.consoleLog();
 		
 		if (teleop != null){
-			if(teleop.launchPad != null)((Object) teleop.launchPad.FindButton(LaunchPadControlIDs.BUTTON_YELLOW)).latchedState(false);
+			if(teleop.launchPad != null) teleop.launchPad.FindButton(LaunchPadControlIDs.BUTTON_YELLOW).latchedState = false;
 		}
 		gearPickupMotor.set(0.0);
 		gearMotor = false;
@@ -70,38 +70,38 @@ public class GearLifter {
 		return;
 	}
 	public void GearIn(){
-		if(gearIn = false){
+	//	if(gearIn = false){
 			Util.consoleLog();
 			gearDeploy.SetA();
 
-			gearIn = true;
-		}
+		//	gearIn = true;
+		//}
 	}
 	public void GearOut(){
-		if(gearIn = true){
+		//if(gearIn = true){
 			Util.consoleLog();
 			gearDeploy.SetB();
 
-			gearIn = false;
-		}
+		//	gearIn = false;
+	//	}
 	}
 	public void GearDown(){
-		if(gearDown = false){
+		//if(gearDown = false){
 			Util.consoleLog();
 			gearLifter.SetB();
 
-			gearDown = true;
-		}
+		//	gearDown = true;
+		//}
 
 	}
 
 	public void GearUp(){
-		if(gearDown = true){
+		//if(gearDown = true){
 			Util.consoleLog();
 			gearLifter.SetA();
 
-			gearDown = false;
-		}
+			//gearDown = false;
+		//}
 	}
 	public void AutoGearPickup(){
 		Util.consoleLog();
@@ -109,7 +109,7 @@ public class GearLifter {
 			return;
 		}
 		autoPickupThread = new AutoGearPickup();
-		autoPickupThread.run();
+		autoPickupThread.start();
 	}
 	public void StopAutoGearPickup(){
 
@@ -130,33 +130,45 @@ public class GearLifter {
 
 			try{
 				GearDown();
-				Timer.delay(.5);
+				Timer.delay(.25);
 				GearOut();
-				Timer.delay(.5);
+				Timer.delay(.25);
+				startGearIn();
+				Timer.delay(.25);
 				GearIn();
-				Timer.delay(.5);
+				Timer.delay(.25);
 				GearUp();
 				autoGear = true;
 
-				while(!isInterrupted() & gearPickupMotor.getOutputCurrent() < 5.0){
-					Timer.delay(.5);
+				while(!isInterrupted() & gearPickupMotor.getOutputCurrent() < 10.0){
+					Timer.delay(.05);
 				}
 				if(!interrupted()) Util.consoleLog("Gear in Place");
 				
 				startGearIn();
+				Timer.delay(.5);
 				GearIn();
 				GearUp();
 				Timer.delay(1);
 				stopGear();
 			}
-			catch(InterruptedException e){
+			/*catch(InterruptedException e)
+			{
 				stopGear();
 				GearIn();
 				GearUp();
+			}*/
+			
+			catch(Throwable e)
+			{
+				e.printStackTrace(Util.logPrintStream);
+			
+				stopGear();
+				GearIn();
+				GearUp();
+			
 			}
-			catch(Throwable e){e.printStackTrace(Util.logPrintStream);
-			}
-
+			
 			autoPickupThread = null;
 		}
 
